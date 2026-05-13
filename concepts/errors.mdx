@@ -38,7 +38,7 @@ A Paysure usa códigos HTTP padrão e responde sempre com JSON:
 | `Já existe uma transação com esse ID Externo.` | `external_id` duplicado |
 | `Essa retirada excede o valor máximo por transação.` | `value_cents` acima do limite do user |
 | `Valor máximo diário atingido. Aguarde o próximo dia.` | Soma de cashouts do dia excedeu limite |
-| `Saldo insuficiente.` | Wallet do user com saldo menor que `value_cents + fee + splits` |
+| `Saldo insuficiente.` | Saldo da conta menor que o total da operação (valor + taxas + splits) |
 | `O valor de splits Excede o limite de 100%` | Soma dos `splits[].value` > 100 |
 | `CPF inválido #PV02` | Validação local de chave PIX detectou CPF/CNPJ malformado |
 | `Valor abaixo do mínimo permitido (R$ X,XX).` | Adquirente exigiu valor mínimo maior |
