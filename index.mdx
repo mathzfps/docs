@@ -1,133 +1,37 @@
 ---
-title: "Introduction"
-description: "Welcome to the new home for your documentation"
-icon: 'star'
+title: Introdução
+description: API REST da Paysure para pagamentos PIX
 ---
 
-## Setting up
+Bem-vindo à documentação da **Paysure API** — a forma mais simples de integrar PIX no seu produto.
 
-Get your documentation site up and running in minutes.
+## O que a Paysure faz
 
-<Card
-  title="Start here"
-  icon="rocket"
-  href="/quickstart"
-  horizontal
->
-  Follow our three step quickstart guide.
-</Card>
+- **Recebe pagamentos PIX** (cash-in) via QR Code dinâmico gerado por API.
+- **Envia pagamentos PIX** (cash-out) para chaves DICT (CPF, CNPJ, email, phone, EVP) ou via QR Code (copia-e-cola).
+- **Distribui splits** automaticamente — divida cada transação entre múltiplos destinatários (% configurável).
+- **Notifica via webhook** todo evento relevante (`paid`, `refunded`, etc) na URL que você fornece.
+- **Wallet por usuário** — saldo é atualizado em tempo real conforme transações liquidam.
 
-## Make it yours
+## Conceitos-chave
 
-Design a docs site that looks great and empowers your users.
-
-<Columns cols={2}>
-  <Card
-    title="Edit locally"
-    icon="pen-to-square"
-    href="/development"
-  >
-    Edit your docs locally and preview them in real time.
+<CardGroup cols={2}>
+  <Card title="Valores em centavos" icon="coin">
+    Toda quantia é em **centavos** (`value_cents`). R$ 1,00 = 100. R$ 99,90 = 9990.
   </Card>
-  <Card
-    title="Customize your site"
-    icon="palette"
-    href="/essentials/settings"
-  >
-    Customize the design and colors of your site to match your brand.
+  <Card title="external_id é seu ID" icon="fingerprint">
+    Sempre envie um `external_id` único por transação. Garante idempotência se a request for repetida.
   </Card>
-    <Card
-    title="Set up navigation"
-    icon="map"
-    href="/essentials/navigation"
-  >
-    Organize your docs to help users find what they need and succeed with your product.
+  <Card title="Webhooks são a verdade" icon="bell">
+    A resposta HTTP 201 só diz que a transação foi *aceita*. O status final (`paid`/`refunded`) chega via webhook.
   </Card>
-  <Card
-    title="API documentation"
-    icon="terminal"
-    href="/api-reference/introduction"
-  >
-    Auto-generate API documentation from OpenAPI specifications.
+  <Card title="Splits em %" icon="chart-pie">
+    Splits são definidos em percentual do valor bruto (`{value: 5}` = 5%).
   </Card>
-</Columns>
+</CardGroup>
 
-## Create beautiful pages
+## Próximo passo
 
-Everything you need to create world-class documentation.
-
-<Columns cols={2}>
-  <Card
-    title="Write with MDX"
-    icon="pen-fancy"
-    href="/essentials/markdown"
-  >
-    Use MDX to style your docs pages.
-  </Card>
-  <Card
-    title="Code samples"
-    icon="code"
-    href="/essentials/code"
-  >
-    Add sample code to demonstrate how to use your product.
-  </Card>
-  <Card
-    title="Images"
-    icon="image"
-    href="/essentials/images"
-  >
-    Display images and other media.
-  </Card>
-  <Card
-    title="Reusable snippets"
-    icon="recycle"
-    href="/essentials/reusable-snippets"
-  >
-    Write once and reuse across your docs.
-  </Card>
-</Columns>
-
-## Make your content agent ready
-
-Make your docs work for humans and AI agents alike.
-
-<Columns cols={2}>
-  <Card
-    title="Prompt component"
-    icon="robot"
-    href="/agent-ready/prompt"
-  >
-    Embed shareable AI prompts readers can copy or open in Cursor.
-  </Card>
-  <Card
-    title="Visibility"
-    icon="eye"
-    href="/agent-ready/visibility"
-  >
-    Show different content to humans and agents reading your docs.
-  </Card>
-  <Card
-    title="Contextual menu"
-    icon="bolt"
-    href="/agent-ready/contextual"
-  >
-    Give readers one-click access to Claude, ChatGPT, Cursor, and more.
-  </Card>
-  <Card
-    title="AI coding tools"
-    icon="wand-magic-sparkles"
-    href="/ai-tools/claude-code"
-  >
-    Set up Claude Code, Cursor, or Windsurf with Mintlify's skill.
-  </Card>
-</Columns>
-
-## Need inspiration?
-
-<Card
-  title="See complete examples"
-  icon="stars"
-  href="https://mintlify.com/customers"
->
-  Browse our showcase of exceptional documentation sites.
+<Card title="Quickstart" icon="rocket" href="/quickstart">
+  Faça sua primeira cobrança PIX em 5 minutos.
 </Card>
