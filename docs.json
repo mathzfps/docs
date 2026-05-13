@@ -48,6 +48,12 @@
               "api-reference/cashout/pay-pix-key",
               "api-reference/cashout/consult"
             ]
+          },
+          {
+            "group": "Recursos da conta",
+            "pages": [
+              "api-reference/me/pix-static"
+            ]
           }
         ]
       }

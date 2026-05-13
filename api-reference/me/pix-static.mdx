@@ -1,0 +1,30 @@
+---
+title: Chave PIX da conta
+openapi: GET /v1/me/pix-static
+---
+
+Retorna o **copia-e-cola PIX permanente** vinculado à sua conta.
+
+## Quando usar
+
+- Compartilhar uma forma fixa de receber PIX em redes sociais, link na bio, mensagens.
+- Casos onde o pagador escolhe quanto pagar (doação, mesada, gorjeta).
+- Evitar gerar um QR Code novo a cada pagamento.
+
+## Como funciona pro integrador
+
+<Steps>
+  <Step title="Chame GET /v1/me/pix-static">
+    Receba o `copia_cola` no JSON.
+  </Step>
+  <Step title="Exiba pro user">
+    Renderize um QR Code visual a partir do `copia_cola` (qualquer lib client-side) e mostre um botão "Copiar".
+  </Step>
+  <Step title="Pagamentos chegam como cash-in normais">
+    Cada pagamento gera um webhook `cashin` no `postbackUrl` configurado, com `status: "paid"`.
+  </Step>
+</Steps>
+
+<Note>
+O valor é definido pelo pagador no app do banco dele. Não é possível fixar valor neste copia-e-cola.
+</Note>

@@ -140,6 +140,46 @@ paths:
               schema: { $ref: '#/components/schemas/CashoutStatus' }
         '404': { $ref: '#/components/responses/NotFound' }
 
+  /v1/me/pix-static:
+    get:
+      tags: [Recursos da conta]
+      summary: Obter chave PIX da conta
+      description: |
+        Retorna o **copia-e-cola PIX permanente** vinculado à sua conta.
+
+        Esse código pode ser compartilhado livremente (redes sociais, link na bio, mensagens).
+        Pagamentos feitos via esse copia-e-cola são identificados automaticamente e
+        creditados no saldo da sua conta — o valor é definido pelo pagador no app do banco.
+      responses:
+        '200':
+          description: Copia-e-cola da conta
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  pix_static:
+                    type: object
+                    properties:
+                      pix_key:
+                        type: string
+                        description: Chave PIX (EVP) do código.
+                        example: "92277bd7-26f6-46dd-..."
+                      pix_key_type:
+                        type: string
+                        enum: [evp]
+                      merchant_name:
+                        type: string
+                        example: "PAYSURE"
+                      merchant_city:
+                        type: string
+                        example: "SAO PAULO"
+                      copia_cola:
+                        type: string
+                        description: BR Code copia-e-cola. Mostre num QR Code visual ou compartilhe diretamente.
+                        example: "00020126580014br.gov.bcb.pix..."
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
 components:
   securitySchemes:
     ClientCredentials:
