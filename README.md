@@ -1,39 +1,55 @@
-# Paysure Docs
+# Mintlify Starter Kit
 
-Documentação pública da Paysure API, publicada via [Mintlify](https://mintlify.com).
+Use the starter kit to get your docs deployed and ready to customize.
 
-## Deploy
+Click the green **Use this template** button at the top of this repo to copy the Mintlify starter kit. The starter kit contains examples with
 
-1. Criar repositório no GitHub (privado ou público): `paysure/paysure-docs`
-2. Push deste diretório pro repo
-3. No painel Mintlify (https://dashboard.mintlify.com):
-   - Conectar com o GitHub
-   - Selecionar o repo `paysure-docs`
-   - Mintlify auto-detecta `mint.json` e `openapi.yaml`
-4. (Opcional) Custom domain: `docs.paysurebr.com` → CNAME pra `cname.mintlify.app`
+- Guide pages
+- Navigation
+- Customizations
+- API reference pages
+- Use of popular components
 
-## Preview local
+**[Follow the full quickstart guide](https://starter.mintlify.com/quickstart)**
+
+## AI-assisted writing
+
+Set up your AI coding tool to work with Mintlify:
 
 ```bash
-npm i -g mintlify
-mintlify dev
+npx skills add https://mintlify.com/docs
 ```
 
-Abre `http://localhost:3000` com hot reload.
+This command installs Mintlify's documentation skill for your configured AI tools like Claude Code, Cursor, Windsurf, and others. The skill includes component reference, writing standards, and workflow guidance.
 
-## Estrutura
+See the [AI tools guides](/ai-tools) for tool-specific setup.
 
-- `mint.json` — config (navegação, cores, links)
-- `openapi.yaml` — spec OpenAPI 3.0 dos endpoints
-- `*.mdx` — páginas de conteúdo (markdown + JSX)
-- `api-reference/` — páginas geradas a partir do openapi.yaml com contexto extra
+## Development
 
-## O que NÃO deve estar aqui
+Install the [Mintlify CLI](https://www.npmjs.com/package/mint) to preview your documentation changes locally. To install, use the following command:
 
-- Rotas internas (`/admin/*`, `/receive-wh/*`, rotas com path-secret)
-- Chaves PIX da Paysure (`92277bd7-...`)
-- Detalhes de adquirentes específicas (OnlyU/Horizon/Pluggou/etc) — sempre falar genericamente "provedor PIX"
-- Schemas internos do DB
-- IPs internos / Tailscale / hostnames
+```
+npm i -g mint
+```
 
-Se algo sensível for adicionado por engano, remover do histórico git antes do push público.
+Run the following command at the root of your documentation, where your `docs.json` is located:
+
+```
+mint dev
+```
+
+View your local preview at `http://localhost:3000`.
+
+## Publishing changes
+
+Install our GitHub app from your [dashboard](https://dashboard.mintlify.com/settings/organization/github-app) to propagate changes from your repo to your deployment. Changes are deployed to production automatically after pushing to the default branch.
+
+## Need help?
+
+### Troubleshooting
+
+- If your dev environment isn't running: Run `mint update` to ensure you have the most recent version of the CLI.
+- If a page loads as a 404: Make sure you are running in a folder with a valid `docs.json`.
+
+### Resources
+- [Mintlify documentation](https://mintlify.com/docs)

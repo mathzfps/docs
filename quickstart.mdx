@@ -1,139 +1,81 @@
 ---
-title: Quickstart
-description: Sua primeira cobrança PIX em 5 minutos
+title: "Quickstart"
+description: "Start building awesome documentation in minutes"
+icon: 'rocket'
 ---
 
-## 1. Gere suas credenciais
+## Get started in three steps
 
-No painel Paysure, vá em **API Keys** e clique **Gerar Nova Chave**. Você recebe:
+Get your documentation site running locally and make your first customization.
 
-- `client_id` (público, header `ci`)
-- `client_secret` (privado, header `cs`)
+### Step 1: Set up your local environment
 
-<Warning>
-Nunca exponha o `client_secret` em código de frontend ou aplicativo mobile. Mantenha sempre no seu backend.
-</Warning>
+<AccordionGroup>
+  <Accordion icon="copy" title="Clone your docs locally">
+    During the onboarding process, you created a GitHub repository with your docs content if you didn't already have one. You can find a link to this repository in your [dashboard](https://dashboard.mintlify.com).
+    
+    To clone the repository locally so that you can make and preview changes to your docs, follow the [Cloning a repository](https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository) guide in the GitHub docs.
+  </Accordion>
+  <Accordion icon="rectangle-terminal" title="Start the preview server">
+    1. Install the Mintlify CLI: `npm i -g mint`
+    2. Navigate to your docs directory and run: `mint dev`
+    3. Open `http://localhost:3000` to see your docs live!
+    
+    <Tip>Your preview updates automatically as you edit files.</Tip>
+  </Accordion>
+</AccordionGroup>
 
-## 2. Crie sua primeira cobrança PIX
+### Step 2: Deploy your changes
 
-<CodeGroup>
+<AccordionGroup>
+  <Accordion icon="github" title="Install our GitHub app">
+    Install the Mintlify GitHub app from your [dashboard](https://dashboard.mintlify.com/settings/organization/github-app).
+    
+    Our GitHub app automatically deploys your changes to your docs site, so you don't need to manage deployments yourself.
+</Accordion>
+<Accordion icon="palette" title="Update your site name and colors">
+    For a first change, let's update the name and colors of your docs site.
 
-```bash cURL
-curl -X POST https://api.paysurebr.com/v1/pix/qrcode \
-  -H "ci: SEU_CLIENT_ID" \
-  -H "cs: SEU_CLIENT_SECRET" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "external_id": "pedido-001",
-    "value_cents": 5000,
-    "postbackUrl": "https://seusite.com/webhooks/paysure",
-    "generator_name": "Cliente Teste",
-    "generator_document": "12345678900"
-  }'
-```
+    1. Open `docs.json` in your editor.
+    2. Change the `"name"` field to your project name.
+    3. Update the `"colors"` to match your brand.
+    4. Save and see your changes instantly at `http://localhost:3000`.
 
-```javascript Node.js
-const r = await fetch('https://api.paysurebr.com/v1/pix/qrcode', {
-  method: 'POST',
-  headers: {
-    'ci': process.env.PAYSURE_CI,
-    'cs': process.env.PAYSURE_CS,
-    'Content-Type': 'application/json',
-  },
-  body: JSON.stringify({
-    external_id: 'pedido-001',
-    value_cents: 5000,
-    postbackUrl: 'https://seusite.com/webhooks/paysure',
-    generator_name: 'Cliente Teste',
-    generator_document: '12345678900',
-  }),
-});
-const { qrcode } = await r.json();
-console.log(qrcode.content); // BR Code copia-e-cola
-```
+    <Tip>Try changing the primary color to see an immediate difference!</Tip>
+  </Accordion>
+</AccordionGroup>
 
-```python Python
-import os, requests
+### Step 3: Go live
 
-r = requests.post(
-    'https://api.paysurebr.com/v1/pix/qrcode',
-    headers={
-        'ci': os.environ['PAYSURE_CI'],
-        'cs': os.environ['PAYSURE_CS'],
-    },
-    json={
-        'external_id': 'pedido-001',
-        'value_cents': 5000,
-        'postbackUrl': 'https://seusite.com/webhooks/paysure',
-        'generator_name': 'Cliente Teste',
-        'generator_document': '12345678900',
-    },
-)
-qrcode = r.json()['qrcode']
-print(qrcode['content'])
-```
+<Accordion icon="rocket" title="Publish your docs">
+  1. Commit and push your changes.
+  2. Your docs will update and be live in moments!
+</Accordion>
 
-```php PHP
-<?php
-$ch = curl_init('https://api.paysurebr.com/v1/pix/qrcode');
-curl_setopt_array($ch, [
-    CURLOPT_RETURNTRANSFER => true,
-    CURLOPT_POST => true,
-    CURLOPT_HTTPHEADER => [
-        'ci: ' . getenv('PAYSURE_CI'),
-        'cs: ' . getenv('PAYSURE_CS'),
-        'Content-Type: application/json',
-    ],
-    CURLOPT_POSTFIELDS => json_encode([
-        'external_id' => 'pedido-001',
-        'value_cents' => 5000,
-        'postbackUrl' => 'https://seusite.com/webhooks/paysure',
-        'generator_name' => 'Cliente Teste',
-        'generator_document' => '12345678900',
-    ]),
-]);
-$response = json_decode(curl_exec($ch), true);
-echo $response['qrcode']['content']; // BR Code
-```
+## Next steps
 
-</CodeGroup>
+Now that you have your docs running, explore these key features:
 
-### Resposta (HTTP 201)
+<CardGroup cols={2}>
 
-```json
-{
-  "qrcode": {
-    "reference_code": "PSR-9c8f7a1e-4d2b-4e6a-8c9f-1a2b3c4d5e6f",
-    "external_reference": "pedido-001",
-    "content": "00020126580014br.gov.bcb.pix..."
-  }
-}
-```
-
-- **`reference_code`**: ID interno Paysure. Guarde — você usa nas consultas e recebe nos webhooks.
-- **`content`**: o BR Code copia-e-cola. Gere um QR Code visual a partir dele (qualquer lib client-side: `qrcodejs`, `qrcode`, etc).
-
-## 3. Receba o webhook quando o cliente pagar
-
-Quando o pagamento for confirmado, enviamos um **POST** para o `postbackUrl`:
-
-```json
-{
-  "cashin": {
-    "reference_code": "PSR-9c8f7a1e-...",
-    "external_reference": "pedido-001",
-    "value_cents": 5000,
-    "status": "paid",
-    "payer_name": "João da Silva",
-    "payer_document": "12345678900",
-    "payment_date": "2026-05-13T10:13:01-03:00",
-    "end_to_end": "E18236120202605131013..."
-  }
-}
-```
-
-Responda com **HTTP 200** para confirmar recebimento. Se devolver erro ou timeout, retentamos.
-
-<Card title="Saiba mais sobre Webhooks" icon="bell" href="/concepts/webhooks">
-  Idempotência, retries, segurança.
+<Card title="Write Content" icon="pen-to-square" href="/essentials/markdown">
+  Learn MDX syntax and start writing your documentation.
 </Card>
+
+<Card title="Customize style" icon="palette" href="/essentials/settings">
+  Make your docs match your brand perfectly.
+</Card>
+
+<Card title="Add code examples" icon="square-code" href="/essentials/code">
+  Include syntax-highlighted code blocks.
+</Card>
+
+<Card title="API documentation" icon="code" href="/api-reference/introduction">
+  Auto-generate API docs from OpenAPI specs.
+</Card>
+
+</CardGroup>
+
+<Note>
+  **Need help?** See our [full documentation](https://mintlify.com/docs) or join our [community](https://mintlify.com/community).
+</Note>
