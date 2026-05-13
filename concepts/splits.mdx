@@ -21,9 +21,9 @@ Em qualquer cash-in ou cash-out, você pode incluir um array `splits` que define
 
 No exemplo:
 - R$ 100,00 cobrados
-- R$ 10,00 (10%) vão pra wallet do `parceiro_a`
-- R$ 5,00 (5%) vão pra wallet do `parceiro_b`
-- R$ 85,00 (menos fees) ficam na wallet do user que criou a cobrança
+- R$ 10,00 (10%) vão pra saldo do `parceiro_a`
+- R$ 5,00 (5%) vão pra saldo do `parceiro_b`
+- R$ 85,00 (menos fees) ficam no saldo de quem criou a cobrança
 
 ## Regras
 
@@ -39,7 +39,7 @@ Splits seguem o mesmo ciclo da transação principal:
 
 | Evento | Comportamento |
 |---|---|
-| Cash-in fica `paid` | Splits são creditados nas wallets dos destinatários. |
+| Cash-in fica `paid` | Splits são creditados nos saldos dos destinatários. |
 | Cash-in fica `refunded` | Splits são estornados. |
 | Cash-out fica `paid` | Splits são creditados. |
 | Cash-out fica `refunded` | Splits são estornados. |

@@ -5,30 +5,24 @@ openapi: POST /v1/pix/payment
 
 Envia um pagamento PIX para uma chave DICT cadastrada (CPF, CNPJ, email, phone, EVP).
 
-## O que acontece
+## Fluxo
 
-<Steps>
-  <Step title="Wallet é debitada imediatamente">
-    `value_cents` + fee + splits saem da wallet do user no momento da request.
-  </Step>
-  <Step title="Pagamento vai pra fila do banco">
-    Resposta HTTP 201 com `status: "processing"`.
-  </Step>
-  <Step title="Banco confirma ou rejeita">
-    Webhook chega em `postbackUrl` com `status: "paid"` ou `status: "refunded"`.
-  </Step>
-  <Step title="Em caso de refunded, wallet é restaurada automaticamente">
-    Você não precisa fazer nada — o valor volta pra wallet do user.
-  </Step>
-</Steps>
+1. Você envia a requisição → recebe `HTTP 201` com `status: "processing"` e um `reference_code`.
+2. Mais tarde, enviamos um webhook em `postbackUrl` com o status final:
+   - `status: "paid"` → pagamento concluído.
+   - `status: "refunded"` → não foi possível concluir; nenhum ajuste é necessário do seu lado.
 
-## Validações locais (antes de chegar no banco)
+<Note>
+Cada `external_id` deve ser único por transação. Use-o como sua chave de idempotência.
+</Note>
 
-Para economizar tentativas no DICT, validamos localmente:
+## Validação de chave PIX
 
-- CPF/CNPJ: módulo 11
-- Email: regex
-- Phone: formato E.164 (+55...)
-- EVP: UUID v4
+Antes de processar, validamos o formato da `pix_key`:
 
-Se a chave falhar na validação, retornamos `422` antes de queimar uma ficha DICT.
+- **CPF / CNPJ**: dígitos verificadores (módulo 11)
+- **Email**: formato válido
+- **Phone**: padrão E.164 (`+55...`)
+- **EVP**: UUID v4
+
+Se a chave estiver malformada, respondemos com `HTTP 422` imediatamente.

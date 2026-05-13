@@ -33,7 +33,7 @@ Toda transação eventualmente envia um **POST** para a `postbackUrl` que você 
 
 | Status | Significado |
 |---|---|
-| `paid` | Cliente pagou. Saldo creditado na wallet. |
+| `paid` | Cliente pagou. Saldo da conta é creditado. |
 | `refunded` | Cliente fez devolução (BACEN). Saldo estornado. |
 | `expired` | QR Code expirou sem pagamento (status terminal). |
 
@@ -56,7 +56,7 @@ Toda transação eventualmente envia um **POST** para a `postbackUrl` que você 
 | Status | Significado |
 |---|---|
 | `paid` | Pagamento concluído pelo banco do destinatário. |
-| `refunded` | Falha no provedor / banco rejeitou. **Wallet estornada automaticamente** — você não precisa fazer nada. |
+| `refunded` | Não foi possível concluir. **Saldo é estornado automaticamente** — você não precisa fazer nada. |
 
 ## Boas práticas
 

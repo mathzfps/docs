@@ -28,7 +28,7 @@ stateDiagram-v2
 stateDiagram-v2
     [*] --> processing: POST /v1/pix/payment
     processing --> paid: banco confirmou
-    processing --> refunded: banco rejeitou (wallet estornada)
+    processing --> refunded: banco rejeitou (saldo estornado)
 ```
 
 **Estados:**
@@ -37,8 +37,8 @@ stateDiagram-v2
 |---|---|---|
 | `processing` | ❌ | Pagamento enviado, aguardando confirmação do banco do destinatário. |
 | `paid` | ✅ | Banco confirmou. Pagamento concluído. |
-| `refunded` | ✅ | Banco rejeitou (ex: chave inválida). **Wallet estornada automaticamente.** |
-| `failed` | ✅ | Erro local antes do envio (saldo insuficiente, validação). Wallet nunca foi debitada. |
+| `refunded` | ✅ | Não foi possível concluir (ex: chave inválida no banco do destinatário). **Saldo é estornado automaticamente.** |
+| `failed` | ✅ | Rejeitado na validação inicial (saldo insuficiente, dados inválidos). Nenhum valor é movimentado. |
 
 ## Idempotência
 

@@ -24,8 +24,8 @@ A Paysure usa códigos HTTP padrão e responde sempre com JSON:
 | **409** | Conflito (ex: `external_id` duplicado) | Use outro `external_id`. |
 | **422** | Falha de validação | Confira os campos do request. |
 | **429** | Rate limit excedido | Aguarde `Retry-After` segundos. |
-| **500** | Erro interno Paysure | Retente. Persistindo, abra ticket. |
-| **501** | Funcionalidade não suportada pela adquirente | — |
+| **500** | Erro interno | Retente. Persistindo, abra ticket. |
+| **501** | Operação não disponível para este recurso | — |
 | **503** | Provedor temporariamente indisponível | Retente em alguns minutos. |
 
 ## Mensagens comuns
@@ -42,8 +42,8 @@ A Paysure usa códigos HTTP padrão e responde sempre com JSON:
 | `O valor de splits Excede o limite de 100%` | Soma dos `splits[].value` > 100 |
 | `CPF inválido #PV02` | Validação local de chave PIX detectou CPF/CNPJ malformado |
 | `Valor abaixo do mínimo permitido (R$ X,XX).` | Adquirente exigiu valor mínimo maior |
-| `Provedor temporariamente indisponível.` | Saldo zerado no provedor ou erro deles |
-| `Falha na validação dos dados.` | Dados rejeitados pela adquirente |
+| `Provedor temporariamente indisponível.` | Falha temporária do processador de pagamento |
+| `Falha na validação dos dados.` | Dados rejeitados pelo processador |
 
 ## Rate limits
 
