@@ -98,64 +98,6 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '422': { $ref: '#/components/responses/ValidationError' }
 
-  /v1/pix/payment/qrcode/preview:
-    post:
-      tags: [Cash-out]
-      summary: Consultar informações de um QR Code antes de pagar
-      description: |
-        Valida e retorna informações de um BR Code (copia-e-cola) — valor, recebedor,
-        tipo (estático/dinâmico), expiração. Não efetua pagamento.
-
-        Use antes de chamar `/v1/pix/payment/qrcode` pra confirmar com o user.
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required: [qr_code]
-              properties:
-                qr_code:
-                  type: string
-                  minLength: 50
-                  maxLength: 1000
-            example:
-              qr_code: "00020126580014br.gov.bcb.pix..."
-      responses:
-        '200':
-          description: Informações do QR Code
-          content:
-            application/json:
-              schema: { $ref: '#/components/schemas/QrPreviewResponse' }
-        '401': { $ref: '#/components/responses/Unauthorized' }
-        '422': { $ref: '#/components/responses/ValidationError' }
-        '429': { $ref: '#/components/responses/RateLimited' }
-
-  /v1/pix/payment/qrcode:
-    post:
-      tags: [Cash-out]
-      summary: Pagar um QR Code (BR Code copia-e-cola)
-      description: |
-        Paga um QR Code PIX (dinâmico ou estático). Wallet debitada imediatamente, webhook ao concluir.
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema: { $ref: '#/components/schemas/QrPaymentRequest' }
-            example:
-              external_id: "qrpay-001"
-              value_cents: 2500
-              qr_code: "00020126580014br.gov.bcb.pix..."
-              postbackUrl: "https://seu-site.com/webhooks/paysure"
-      responses:
-        '201':
-          description: Pagamento aceito (processando)
-          content:
-            application/json:
-              schema: { $ref: '#/components/schemas/PixPaymentResponse' }
-        '401': { $ref: '#/components/responses/Unauthorized' }
-        '422': { $ref: '#/components/responses/ValidationError' }
-
   /v1/pix/cashin/consult:
     post:
       tags: [Consultas]
@@ -197,37 +139,6 @@ paths:
             application/json:
               schema: { $ref: '#/components/schemas/CashoutStatus' }
         '404': { $ref: '#/components/responses/NotFound' }
-
-  /v1/me/pix-static:
-    get:
-      tags: [Recursos da conta]
-      summary: Obter chave PIX estática (copia-e-cola fixo)
-      description: |
-        Retorna um BR Code estático personalizado do user autenticado.
-
-        Esse copia-e-cola pode ser compartilhado livremente (rede social, link na bio, mensagem).
-        Quando alguém paga, o valor cai automaticamente na wallet do user dono do código,
-        graças a um identificador embutido no `txid` do BR Code.
-
-        Valor é aberto — pagador define quanto pagar.
-      responses:
-        '200':
-          description: Copia-e-cola estático
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  pix_static:
-                    type: object
-                    properties:
-                      txid:          { type: string, example: "PSR168" }
-                      pix_key:       { type: string, example: "92277bd7-26f6-46dd-..." }
-                      pix_key_type:  { type: string, example: "evp" }
-                      merchant_name: { type: string, example: "PAYSURE" }
-                      merchant_city: { type: string, example: "SAO PAULO" }
-                      copia_cola:    { type: string, example: "00020126580014br.gov.bcb.pix0136..." }
-        '401': { $ref: '#/components/responses/Unauthorized' }
 
 components:
   securitySchemes:
@@ -340,24 +251,6 @@ components:
           maxItems: 20
           items: { $ref: '#/components/schemas/Split' }
 
-    QrPaymentRequest:
-      type: object
-      required: [external_id, value_cents, qr_code, postbackUrl]
-      properties:
-        external_id:    { type: string, maxLength: 191 }
-        value_cents:    { type: integer, minimum: 100 }
-        qr_code:
-          type: string
-          minLength: 50
-          maxLength: 1000
-          description: BR Code copia-e-cola obtido do `/preview`.
-        description:    { type: string, maxLength: 255, nullable: true }
-        postbackUrl:    { type: string, format: uri }
-        splits:
-          type: array
-          maxItems: 20
-          items: { $ref: '#/components/schemas/Split' }
-
     PixPaymentResponse:
       type: object
       properties:
@@ -367,23 +260,6 @@ components:
             reference_code:     { type: string }
             external_reference: { type: string }
             status:             { type: string, enum: [processing] }
-
-    QrPreviewResponse:
-      type: object
-      properties:
-        qrcode_preview:
-          type: object
-          properties:
-            type:             { type: string, enum: [dynamic, static] }
-            value_cents:      { type: integer, nullable: true, description: "Valor em centavos (null em QR de valor aberto)." }
-            amount_editable:  { type: boolean, description: "Se true, pagador pode escolher o valor." }
-            receiver_name:    { type: string, nullable: true }
-            receiver_city:    { type: string, nullable: true }
-            receiver_pix_key: { type: string, nullable: true }
-            txid:             { type: string, nullable: true }
-            end_to_end_id:    { type: string, nullable: true }
-            expires_in_secs:  { type: integer, nullable: true }
-            description:      { type: string, nullable: true }
 
     CashinStatus:
       type: object

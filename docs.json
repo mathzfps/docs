@@ -34,7 +34,6 @@
       },
       {
         "tab": "API Reference",
-        "openapi": "openapi.yaml",
         "groups": [
           {
             "group": "Cash-in",
@@ -47,15 +46,7 @@
             "group": "Cash-out",
             "pages": [
               "api-reference/cashout/pay-pix-key",
-              "api-reference/cashout/preview-qrcode",
-              "api-reference/cashout/pay-qrcode",
               "api-reference/cashout/consult"
-            ]
-          },
-          {
-            "group": "Recursos da conta",
-            "pages": [
-              "api-reference/me/pix-static"
             ]
           }
         ]
