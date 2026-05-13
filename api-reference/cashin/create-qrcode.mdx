@@ -1,0 +1,23 @@
+---
+title: Gerar QR Code PIX
+openapi: POST /v1/pix/qrcode
+---
+
+Cria uma nova cobrança PIX e retorna o BR Code (copia-e-cola) que o pagador pode escanear ou colar no app do banco dele.
+
+## Fluxo completo
+
+<Steps>
+  <Step title="Você faz POST /v1/pix/qrcode">
+    Envie `external_id`, `value_cents`, `postbackUrl` e dados opcionais do pagador.
+  </Step>
+  <Step title="Recebe HTTP 201 com BR Code">
+    Use `qrcode.content` (BR Code copia-e-cola) pra gerar o QR visual no seu frontend.
+  </Step>
+  <Step title="Cliente paga via app do banco dele">
+    Pagador escaneia o QR ou cola o código. Banco processa o PIX.
+  </Step>
+  <Step title="Paysure envia webhook com status paid">
+    Você recebe POST em `postbackUrl` com `cashin.status = "paid"`. Credite o produto/serviço no seu sistema.
+  </Step>
+</Steps>

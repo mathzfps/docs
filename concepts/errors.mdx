@@ -1,0 +1,56 @@
+---
+title: Erros
+description: Códigos HTTP e mensagens da Paysure API
+---
+
+A Paysure usa códigos HTTP padrão e responde sempre com JSON:
+
+```json
+{
+  "message": "Descrição do erro em português",
+  "ms": 12.34
+}
+```
+
+## Códigos HTTP
+
+| Código | Significado | Ação sugerida |
+|---|---|---|
+| **200** | Sucesso (consulta, preview) | — |
+| **201** | Recurso criado (cobrança, pagamento) | — |
+| **401** | Não autenticado / credenciais inválidas | Verifique `ci`/`cs`. |
+| **403** | Conta inativa ou acesso negado | Contate suporte. |
+| **404** | Recurso não encontrado | Confirme `reference_code`. |
+| **409** | Conflito (ex: `external_id` duplicado) | Use outro `external_id`. |
+| **422** | Falha de validação | Confira os campos do request. |
+| **429** | Rate limit excedido | Aguarde `Retry-After` segundos. |
+| **500** | Erro interno Paysure | Retente. Persistindo, abra ticket. |
+| **501** | Funcionalidade não suportada pela adquirente | — |
+| **503** | Provedor temporariamente indisponível | Retente em alguns minutos. |
+
+## Mensagens comuns
+
+| Mensagem | Causa típica |
+|---|---|
+| `Missing client_id or client_secret` | Headers `ci`/`cs` ausentes |
+| `Invalid credentials or inactive` | Par incorreto ou chave desativada |
+| `Account inactive` | User dono da chave está inativo |
+| `Já existe uma transação com esse ID Externo.` | `external_id` duplicado |
+| `Essa retirada excede o valor máximo por transação.` | `value_cents` acima do limite do user |
+| `Valor máximo diário atingido. Aguarde o próximo dia.` | Soma de cashouts do dia excedeu limite |
+| `Saldo insuficiente.` | Wallet do user com saldo menor que `value_cents + fee + splits` |
+| `O valor de splits Excede o limite de 100%` | Soma dos `splits[].value` > 100 |
+| `CPF inválido #PV02` | Validação local de chave PIX detectou CPF/CNPJ malformado |
+| `Valor abaixo do mínimo permitido (R$ X,XX).` | Adquirente exigiu valor mínimo maior |
+| `Provedor temporariamente indisponível.` | Saldo zerado no provedor ou erro deles |
+| `Falha na validação dos dados.` | Dados rejeitados pela adquirente |
+
+## Rate limits
+
+| Endpoint | Limite |
+|---|---|
+| `POST /v1/pix/qrcode` (cash-in) | Definido por chave/conta |
+| `POST /v1/pix/payment` (cash-out) | 60 / minuto por user |
+| `POST /v1/pix/payment/qrcode/preview` | 120 / minuto por user |
+
+Ao exceder, recebemos `429` com header `Retry-After: <segundos>`.

@@ -1,0 +1,53 @@
+---
+title: Splits
+description: Divida cada transação entre múltiplos destinatários
+---
+
+## Como funciona
+
+Em qualquer cash-in ou cash-out, você pode incluir um array `splits` que define percentuais a deduzir pra outros usuários Paysure.
+
+```json
+{
+  "external_id": "pedido-001",
+  "value_cents": 10000,
+  "postbackUrl": "https://...",
+  "splits": [
+    { "clientId": "parceiro_a", "value": 10 },
+    { "clientId": "parceiro_b", "value": 5 }
+  ]
+}
+```
+
+No exemplo:
+- R$ 100,00 cobrados
+- R$ 10,00 (10%) vão pra wallet do `parceiro_a`
+- R$ 5,00 (5%) vão pra wallet do `parceiro_b`
+- R$ 85,00 (menos fees) ficam na wallet do user que criou a cobrança
+
+## Regras
+
+<Check>**`value` é percentual do valor bruto** — `5` significa 5%, não R$ 0,05.</Check>
+<Check>**`clientId` deve ser o `username` Paysure do destinatário** — não o `external_id` da sua aplicação.</Check>
+<Check>**Soma máxima dos splits: 100%**. Acima disso, retornamos erro 422.</Check>
+<Check>**Cash-in**: até 10 destinatários por transação.</Check>
+<Check>**Cash-out**: até 20 destinatários por transação.</Check>
+
+## Quando o split é creditado
+
+Splits seguem o mesmo ciclo da transação principal:
+
+| Evento | Comportamento |
+|---|---|
+| Cash-in fica `paid` | Splits são creditados nas wallets dos destinatários. |
+| Cash-in fica `refunded` | Splits são estornados. |
+| Cash-out fica `paid` | Splits são creditados. |
+| Cash-out fica `refunded` | Splits são estornados. |
+
+## Atenção: clientIds inexistentes
+
+Se o `clientId` informado não existe como user Paysure, o valor do split fica **retido** até alocação manual. Recomendamos validar com seus parceiros antes de configurar splits dinâmicos.
+
+<Warning>
+Em produção, valide com a Paysure que todos os `clientId` que você vai usar estão cadastrados como users antes de habilitar o fluxo.
+</Warning>

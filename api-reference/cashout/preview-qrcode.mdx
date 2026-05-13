@@ -1,0 +1,18 @@
+---
+title: Preview de QR Code
+openapi: POST /v1/pix/payment/qrcode/preview
+---
+
+Consulta as informações de um BR Code (copia-e-cola) **sem efetuar o pagamento**.
+
+Use antes de chamar `POST /v1/pix/payment/qrcode` para confirmar com o user:
+
+- Valor a pagar (em QR estático aberto, pode ser editável)
+- Nome do recebedor
+- Cidade
+- Chave PIX
+- Data de expiração (se QR dinâmico)
+
+<Note>
+O preview tem **cache de 60 segundos** por QR Code. Cliques múltiplos no mesmo código não geram requisições duplicadas pro provedor.
+</Note>

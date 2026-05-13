@@ -1,0 +1,34 @@
+---
+title: Pagar PIX via chave
+openapi: POST /v1/pix/payment
+---
+
+Envia um pagamento PIX para uma chave DICT cadastrada (CPF, CNPJ, email, phone, EVP).
+
+## O que acontece
+
+<Steps>
+  <Step title="Wallet é debitada imediatamente">
+    `value_cents` + fee + splits saem da wallet do user no momento da request.
+  </Step>
+  <Step title="Pagamento vai pra fila do banco">
+    Resposta HTTP 201 com `status: "processing"`.
+  </Step>
+  <Step title="Banco confirma ou rejeita">
+    Webhook chega em `postbackUrl` com `status: "paid"` ou `status: "refunded"`.
+  </Step>
+  <Step title="Em caso de refunded, wallet é restaurada automaticamente">
+    Você não precisa fazer nada — o valor volta pra wallet do user.
+  </Step>
+</Steps>
+
+## Validações locais (antes de chegar no banco)
+
+Para economizar tentativas no DICT, validamos localmente:
+
+- CPF/CNPJ: módulo 11
+- Email: regex
+- Phone: formato E.164 (+55...)
+- EVP: UUID v4
+
+Se a chave falhar na validação, retornamos `422` antes de queimar uma ficha DICT.

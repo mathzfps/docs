@@ -1,0 +1,450 @@
+openapi: 3.0.3
+info:
+  title: Paysure API
+  version: 1.0.0
+  description: |
+    API REST da Paysure para integração de pagamentos PIX em produção.
+
+    **Capacidades:**
+    - Geração de cobranças PIX (cash-in) com QR Code dinâmico
+    - Pagamento de chaves PIX e QR Codes (cash-out)
+    - Splits configuráveis por transação (até 20 destinatários, % do bruto)
+    - Webhooks idempotentes para confirmação de pagamento
+    - Consulta de status de transações
+    - Chave PIX estática personalizada com identificador embutido
+
+    Todas as transações são em **centavos** (`value_cents`) e em moeda **BRL**.
+
+  contact:
+    name: Paysure Suporte
+    url: https://paysurebr.com
+servers:
+  - url: https://api.paysurebr.com
+    description: Produção
+
+security:
+  - ClientCredentials: []
+
+paths:
+  /v1/pix/qrcode:
+    post:
+      tags: [Cash-in]
+      summary: Gerar cobrança PIX (QR Code dinâmico)
+      description: |
+        Cria uma nova cobrança PIX e retorna o BR Code (copia-e-cola) que o pagador usa.
+
+        Quando o pagador efetua o pagamento, enviamos um webhook para `postbackUrl` com status `paid`.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CashInRequest' }
+            example:
+              external_id: "order-12345"
+              value_cents: 10000
+              postbackUrl: "https://seu-site.com/webhooks/paysure"
+              generator_name: "João da Silva"
+              generator_document: "12345678900"
+              description: "Pedido #12345"
+              splits:
+                - clientId: "parceiro1"
+                  value: 5
+      responses:
+        '201':
+          description: Cobrança criada
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CashInResponse' }
+              example:
+                qrcode:
+                  reference_code: "PSR-9c8f7a1e-4d2b-4e6a-8c9f-1a2b3c4d5e6f"
+                  external_reference: "order-12345"
+                  content: "00020126580014br.gov.bcb.pix..."
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
+  /v1/pix/payment:
+    post:
+      tags: [Cash-out]
+      summary: Pagar PIX via chave (CPF/CNPJ/email/phone/EVP)
+      description: |
+        Envia um pagamento PIX para a chave especificada. Wallet do user é debitada imediatamente.
+
+        Status final via webhook em `postbackUrl`. Em caso de falha do provedor, o valor é estornado automaticamente.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/PixPaymentRequest' }
+            example:
+              external_id: "withdraw-001"
+              value_cents: 5000
+              pix_key_type: "cpf"
+              pix_key: "12345678900"
+              receiver_name: "Maria Souza"
+              receiver_document: "12345678900"
+              postbackUrl: "https://seu-site.com/webhooks/paysure"
+      responses:
+        '201':
+          description: Pagamento aceito (processando)
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PixPaymentResponse' }
+              example:
+                cashout:
+                  reference_code: "PSR-1234abcd-..."
+                  external_reference: "withdraw-001"
+                  status: "processing"
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
+  /v1/pix/payment/qrcode/preview:
+    post:
+      tags: [Cash-out]
+      summary: Consultar informações de um QR Code antes de pagar
+      description: |
+        Valida e retorna informações de um BR Code (copia-e-cola) — valor, recebedor,
+        tipo (estático/dinâmico), expiração. Não efetua pagamento.
+
+        Use antes de chamar `/v1/pix/payment/qrcode` pra confirmar com o user.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [qr_code]
+              properties:
+                qr_code:
+                  type: string
+                  minLength: 50
+                  maxLength: 1000
+            example:
+              qr_code: "00020126580014br.gov.bcb.pix..."
+      responses:
+        '200':
+          description: Informações do QR Code
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/QrPreviewResponse' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+        '429': { $ref: '#/components/responses/RateLimited' }
+
+  /v1/pix/payment/qrcode:
+    post:
+      tags: [Cash-out]
+      summary: Pagar um QR Code (BR Code copia-e-cola)
+      description: |
+        Paga um QR Code PIX (dinâmico ou estático). Wallet debitada imediatamente, webhook ao concluir.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/QrPaymentRequest' }
+            example:
+              external_id: "qrpay-001"
+              value_cents: 2500
+              qr_code: "00020126580014br.gov.bcb.pix..."
+              postbackUrl: "https://seu-site.com/webhooks/paysure"
+      responses:
+        '201':
+          description: Pagamento aceito (processando)
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PixPaymentResponse' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
+  /v1/pix/cashin/consult:
+    post:
+      tags: [Consultas]
+      summary: Consultar status de uma cobrança PIX (cash-in)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [reference_code]
+              properties:
+                reference_code: { type: string, example: "PSR-9c8f7a1e-..." }
+      responses:
+        '200':
+          description: Status do cash-in
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CashinStatus' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /v1/pix/cashout/consult:
+    post:
+      tags: [Consultas]
+      summary: Consultar status de um pagamento PIX (cash-out)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [reference_code]
+              properties:
+                reference_code: { type: string }
+      responses:
+        '200':
+          description: Status do cash-out
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CashoutStatus' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /v1/me/pix-static:
+    get:
+      tags: [Recursos da conta]
+      summary: Obter chave PIX estática (copia-e-cola fixo)
+      description: |
+        Retorna um BR Code estático personalizado do user autenticado.
+
+        Esse copia-e-cola pode ser compartilhado livremente (rede social, link na bio, mensagem).
+        Quando alguém paga, o valor cai automaticamente na wallet do user dono do código,
+        graças a um identificador embutido no `txid` do BR Code.
+
+        Valor é aberto — pagador define quanto pagar.
+      responses:
+        '200':
+          description: Copia-e-cola estático
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  pix_static:
+                    type: object
+                    properties:
+                      txid:          { type: string, example: "PSR168" }
+                      pix_key:       { type: string, example: "92277bd7-26f6-46dd-..." }
+                      pix_key_type:  { type: string, example: "evp" }
+                      merchant_name: { type: string, example: "PAYSURE" }
+                      merchant_city: { type: string, example: "SAO PAULO" }
+                      copia_cola:    { type: string, example: "00020126580014br.gov.bcb.pix0136..." }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+components:
+  securitySchemes:
+    ClientCredentials:
+      type: apiKey
+      in: header
+      name: ci
+      description: |
+        Autenticação por par client-credentials. Envie **dois headers** em toda requisição:
+
+        - `ci`: client_id (público)
+        - `cs`: client_secret (privado — nunca exponha no frontend)
+
+        Gere as credenciais no painel da Paysure em **API Keys**. Você pode ter múltiplas chaves ativas.
+
+  schemas:
+    Split:
+      type: object
+      required: [clientId, value]
+      properties:
+        clientId:
+          type: string
+          maxLength: 191
+          description: Username Paysure do destinatário do split.
+          example: "parceiro1"
+        value:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 100
+          description: Percentual do valor bruto (1 = 1%, 5 = 5%).
+          example: 5
+
+    CashInRequest:
+      type: object
+      required: [external_id, value_cents, postbackUrl]
+      properties:
+        external_id:
+          type: string
+          maxLength: 191
+          description: Seu identificador único da transação. Use idempotência.
+        value_cents:
+          type: integer
+          minimum: 100
+          description: Valor em centavos (R$ 1,00 = 100).
+        generator_name:
+          type: string
+          maxLength: 191
+          nullable: true
+          description: Nome do pagador (cliente final). Opcional.
+        generator_document:
+          type: string
+          maxLength: 32
+          nullable: true
+          description: CPF ou CNPJ do pagador. Opcional.
+        description:
+          type: string
+          maxLength: 255
+          nullable: true
+        postbackUrl:
+          type: string
+          format: uri
+          description: URL HTTPS para receber webhook quando o pagamento for confirmado.
+        splits:
+          type: array
+          maxItems: 10
+          items: { $ref: '#/components/schemas/Split' }
+
+    CashInResponse:
+      type: object
+      properties:
+        qrcode:
+          type: object
+          properties:
+            reference_code:     { type: string, description: "ID interno Paysure (use pra consultar)." }
+            external_reference: { type: string, description: "Seu external_id ecoado." }
+            content:            { type: string, description: "BR Code copia-e-cola. Mostre no QR pra pagador." }
+
+    PixPaymentRequest:
+      type: object
+      required: [external_id, value_cents, pix_key_type, pix_key, receiver_name, receiver_document, postbackUrl]
+      properties:
+        external_id:
+          type: string
+          maxLength: 191
+        value_cents:
+          type: integer
+          minimum: 100
+        pix_key_type:
+          type: string
+          enum: [cpf, cnpj, email, phone, evp]
+        pix_key:
+          type: string
+          maxLength: 255
+        receiver_name:
+          type: string
+          maxLength: 191
+        receiver_document:
+          type: string
+          maxLength: 32
+        description:
+          type: string
+          maxLength: 255
+          nullable: true
+        postbackUrl:
+          type: string
+          format: uri
+        splits:
+          type: array
+          maxItems: 20
+          items: { $ref: '#/components/schemas/Split' }
+
+    QrPaymentRequest:
+      type: object
+      required: [external_id, value_cents, qr_code, postbackUrl]
+      properties:
+        external_id:    { type: string, maxLength: 191 }
+        value_cents:    { type: integer, minimum: 100 }
+        qr_code:
+          type: string
+          minLength: 50
+          maxLength: 1000
+          description: BR Code copia-e-cola obtido do `/preview`.
+        description:    { type: string, maxLength: 255, nullable: true }
+        postbackUrl:    { type: string, format: uri }
+        splits:
+          type: array
+          maxItems: 20
+          items: { $ref: '#/components/schemas/Split' }
+
+    PixPaymentResponse:
+      type: object
+      properties:
+        cashout:
+          type: object
+          properties:
+            reference_code:     { type: string }
+            external_reference: { type: string }
+            status:             { type: string, enum: [processing] }
+
+    QrPreviewResponse:
+      type: object
+      properties:
+        qrcode_preview:
+          type: object
+          properties:
+            type:             { type: string, enum: [dynamic, static] }
+            value_cents:      { type: integer, nullable: true, description: "Valor em centavos (null em QR de valor aberto)." }
+            amount_editable:  { type: boolean, description: "Se true, pagador pode escolher o valor." }
+            receiver_name:    { type: string, nullable: true }
+            receiver_city:    { type: string, nullable: true }
+            receiver_pix_key: { type: string, nullable: true }
+            txid:             { type: string, nullable: true }
+            end_to_end_id:    { type: string, nullable: true }
+            expires_in_secs:  { type: integer, nullable: true }
+            description:      { type: string, nullable: true }
+
+    CashinStatus:
+      type: object
+      properties:
+        cashin:
+          type: object
+          properties:
+            reference_code:     { type: string }
+            external_reference: { type: string }
+            value_cents:        { type: integer }
+            status:             { type: string, enum: [pending, paid, expired, refunded, failed] }
+            payment_date:       { type: string, format: date-time, nullable: true }
+            end_to_end:         { type: string, nullable: true }
+            payer_name:         { type: string, nullable: true }
+            payer_document:     { type: string, nullable: true }
+
+    CashoutStatus:
+      type: object
+      properties:
+        cashout:
+          type: object
+          properties:
+            reference_code:     { type: string }
+            external_reference: { type: string }
+            status:             { type: string, enum: [processing, paid, refunded, failed] }
+            end_to_end:         { type: string, nullable: true }
+            occurred_at:        { type: string, format: date-time, nullable: true }
+
+    Error:
+      type: object
+      properties:
+        message: { type: string }
+        ms:      { type: number, description: "Tempo de processamento da request em ms." }
+
+  responses:
+    Unauthorized:
+      description: Credenciais inválidas, ausentes ou inativas.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+          example:
+            message: "Invalid credentials or inactive"
+
+    ValidationError:
+      description: Erro de validação (campos faltando ou inválidos).
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+
+    NotFound:
+      description: Recurso não encontrado.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+
+    RateLimited:
+      description: Limite de requisições excedido. Aguarde antes de retentar.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+      headers:
+        Retry-After:
+          schema: { type: integer }
+          description: Segundos a esperar antes de retentar.

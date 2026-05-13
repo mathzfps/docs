@@ -1,0 +1,12 @@
+---
+title: Consultar cash-in
+openapi: POST /v1/pix/cashin/consult
+---
+
+Consulta o status atual de uma cobrança PIX gerada anteriormente.
+
+Use o `reference_code` retornado em `POST /v1/pix/qrcode` para identificar a transação.
+
+<Note>
+Não use polling agressivo. Confie no webhook em `postbackUrl` como fonte primária de status. Use essa rota apenas para reconciliação manual.
+</Note>

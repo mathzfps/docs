@@ -1,0 +1,139 @@
+---
+title: Quickstart
+description: Sua primeira cobrança PIX em 5 minutos
+---
+
+## 1. Gere suas credenciais
+
+No painel Paysure, vá em **API Keys** e clique **Gerar Nova Chave**. Você recebe:
+
+- `client_id` (público, header `ci`)
+- `client_secret` (privado, header `cs`)
+
+<Warning>
+Nunca exponha o `client_secret` em código de frontend ou aplicativo mobile. Mantenha sempre no seu backend.
+</Warning>
+
+## 2. Crie sua primeira cobrança PIX
+
+<CodeGroup>
+
+```bash cURL
+curl -X POST https://api.paysurebr.com/v1/pix/qrcode \
+  -H "ci: SEU_CLIENT_ID" \
+  -H "cs: SEU_CLIENT_SECRET" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "external_id": "pedido-001",
+    "value_cents": 5000,
+    "postbackUrl": "https://seusite.com/webhooks/paysure",
+    "generator_name": "Cliente Teste",
+    "generator_document": "12345678900"
+  }'
+```
+
+```javascript Node.js
+const r = await fetch('https://api.paysurebr.com/v1/pix/qrcode', {
+  method: 'POST',
+  headers: {
+    'ci': process.env.PAYSURE_CI,
+    'cs': process.env.PAYSURE_CS,
+    'Content-Type': 'application/json',
+  },
+  body: JSON.stringify({
+    external_id: 'pedido-001',
+    value_cents: 5000,
+    postbackUrl: 'https://seusite.com/webhooks/paysure',
+    generator_name: 'Cliente Teste',
+    generator_document: '12345678900',
+  }),
+});
+const { qrcode } = await r.json();
+console.log(qrcode.content); // BR Code copia-e-cola
+```
+
+```python Python
+import os, requests
+
+r = requests.post(
+    'https://api.paysurebr.com/v1/pix/qrcode',
+    headers={
+        'ci': os.environ['PAYSURE_CI'],
+        'cs': os.environ['PAYSURE_CS'],
+    },
+    json={
+        'external_id': 'pedido-001',
+        'value_cents': 5000,
+        'postbackUrl': 'https://seusite.com/webhooks/paysure',
+        'generator_name': 'Cliente Teste',
+        'generator_document': '12345678900',
+    },
+)
+qrcode = r.json()['qrcode']
+print(qrcode['content'])
+```
+
+```php PHP
+<?php
+$ch = curl_init('https://api.paysurebr.com/v1/pix/qrcode');
+curl_setopt_array($ch, [
+    CURLOPT_RETURNTRANSFER => true,
+    CURLOPT_POST => true,
+    CURLOPT_HTTPHEADER => [
+        'ci: ' . getenv('PAYSURE_CI'),
+        'cs: ' . getenv('PAYSURE_CS'),
+        'Content-Type: application/json',
+    ],
+    CURLOPT_POSTFIELDS => json_encode([
+        'external_id' => 'pedido-001',
+        'value_cents' => 5000,
+        'postbackUrl' => 'https://seusite.com/webhooks/paysure',
+        'generator_name' => 'Cliente Teste',
+        'generator_document' => '12345678900',
+    ]),
+]);
+$response = json_decode(curl_exec($ch), true);
+echo $response['qrcode']['content']; // BR Code
+```
+
+</CodeGroup>
+
+### Resposta (HTTP 201)
+
+```json
+{
+  "qrcode": {
+    "reference_code": "PSR-9c8f7a1e-4d2b-4e6a-8c9f-1a2b3c4d5e6f",
+    "external_reference": "pedido-001",
+    "content": "00020126580014br.gov.bcb.pix..."
+  }
+}
+```
+
+- **`reference_code`**: ID interno Paysure. Guarde — você usa nas consultas e recebe nos webhooks.
+- **`content`**: o BR Code copia-e-cola. Gere um QR Code visual a partir dele (qualquer lib client-side: `qrcodejs`, `qrcode`, etc).
+
+## 3. Receba o webhook quando o cliente pagar
+
+Quando o pagamento for confirmado, enviamos um **POST** para o `postbackUrl`:
+
+```json
+{
+  "cashin": {
+    "reference_code": "PSR-9c8f7a1e-...",
+    "external_reference": "pedido-001",
+    "value_cents": 5000,
+    "status": "paid",
+    "payer_name": "João da Silva",
+    "payer_document": "12345678900",
+    "payment_date": "2026-05-13T10:13:01-03:00",
+    "end_to_end": "E18236120202605131013..."
+  }
+}
+```
+
+Responda com **HTTP 200** para confirmar recebimento. Se devolver erro ou timeout, retentamos.
+
+<Card title="Saiba mais sobre Webhooks" icon="bell" href="/concepts/webhooks">
+  Idempotência, retries, segurança.
+</Card>

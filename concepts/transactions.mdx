@@ -1,0 +1,52 @@
+---
+title: Transações
+description: Ciclo de vida de cash-ins e cash-outs
+---
+
+## Cash-in (recebimento)
+
+```mermaid
+stateDiagram-v2
+    [*] --> pending: POST /v1/pix/qrcode
+    pending --> paid: cliente paga
+    pending --> expired: QR Code caduca
+    paid --> refunded: cliente solicita devolução
+```
+
+**Estados:**
+
+| Status | Final? | Significado |
+|---|---|---|
+| `pending` | ❌ | QR Code gerado, aguardando pagamento. |
+| `paid` | ✅ | Cliente pagou. Saldo creditado. |
+| `expired` | ✅ | QR Code expirou sem pagamento. |
+| `refunded` | ✅ | Devolução pós-pagamento. Saldo estornado. |
+
+## Cash-out (pagamento)
+
+```mermaid
+stateDiagram-v2
+    [*] --> processing: POST /v1/pix/payment
+    processing --> paid: banco confirmou
+    processing --> refunded: banco rejeitou (wallet estornada)
+```
+
+**Estados:**
+
+| Status | Final? | Significado |
+|---|---|---|
+| `processing` | ❌ | Pagamento enviado, aguardando confirmação do banco do destinatário. |
+| `paid` | ✅ | Banco confirmou. Pagamento concluído. |
+| `refunded` | ✅ | Banco rejeitou (ex: chave inválida). **Wallet estornada automaticamente.** |
+| `failed` | ✅ | Erro local antes do envio (saldo insuficiente, validação). Wallet nunca foi debitada. |
+
+## Idempotência
+
+Use `external_id` como identificador único da sua transação. Se você enviar a mesma cobrança 2x com o mesmo `external_id`:
+
+- Se a primeira ainda está `pending`/`processing`/`paid` → retornamos erro `409 Conflict` (ou `401` com mensagem específica em endpoints legados).
+- Se a primeira está `failed` → permitimos retentar com mesmo `external_id`.
+
+<Tip>
+Use UUIDs ou IDs únicos do seu sistema (`pedido-001`, `withdrawal-abc123`) — nunca timestamps puros (que podem colidir em alta concorrência).
+</Tip>

@@ -1,0 +1,35 @@
+---
+title: Chave PIX estática
+openapi: GET /v1/me/pix-static
+---
+
+Retorna o **copia-e-cola estático personalizado** do user autenticado.
+
+## Quando usar
+
+- O user quer **receber PIX direto** sem ter que gerar um QR Code a cada vez.
+- Compartilhamento em rede social, link na bio do Instagram, mensagem no zap.
+- Doações, mesadas, valores recorrentes onde cada pagador escolhe quanto pagar.
+
+## Como funciona
+
+Cada user tem um identificador único embutido no `txid` do BR Code. Quando alguém paga, identificamos automaticamente quem é o destinatário e creditamos a wallet correta.
+
+<Steps>
+  <Step title="Você chama GET /v1/me/pix-static">
+    Receba o `copia_cola` no JSON.
+  </Step>
+  <Step title="Mostre pro user">
+    Gere QR Code visual no frontend (libs: `qrcodejs`, `qrcode`) + exiba o copia-e-cola com botão "Copiar".
+  </Step>
+  <Step title="Pagador paga em qualquer app de banco">
+    O `txid` no BR Code identifica seu user.
+  </Step>
+  <Step title="Webhook chega no postbackUrl da chave API">
+    Igual qualquer cash-in. Status `paid`, wallet creditada, splits processados (se houver).
+  </Step>
+</Steps>
+
+<Warning>
+O copia-e-cola tem **valor aberto** — o pagador escolhe quanto pagar no app do banco dele. Não dá pra fixar valor em estático.
+</Warning>

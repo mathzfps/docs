@@ -1,0 +1,95 @@
+---
+title: Webhooks
+description: Como a Paysure notifica seu sistema sobre eventos
+---
+
+## Como funciona
+
+Toda transação eventualmente envia um **POST** para a `postbackUrl` que você forneceu na criação. O envelope é sempre tipado:
+
+- **Cash-in** (cobrança recebida) → `{ "cashin": { ... } }`
+- **Cash-out** (pagamento enviado) → `{ "cashout": { ... } }`
+
+## Cash-in (recebimento confirmado)
+
+```json
+{
+  "cashin": {
+    "reference_code": "PSR-9c8f7a1e-...",
+    "external_reference": "pedido-001",
+    "value_cents": 5000,
+    "status": "paid",
+    "payer_name": "João da Silva",
+    "payer_document": "12345678900",
+    "payment_date": "2026-05-13T10:13:01-03:00",
+    "registration_date": "2026-05-13T10:12:15-03:00",
+    "end_to_end": "E18236120202605131013...",
+    "content": "00020126580014br.gov.bcb.pix..."
+  }
+}
+```
+
+### Status possíveis
+
+| Status | Significado |
+|---|---|
+| `paid` | Cliente pagou. Saldo creditado na wallet. |
+| `refunded` | Cliente fez devolução (BACEN). Saldo estornado. |
+| `expired` | QR Code expirou sem pagamento (status terminal). |
+
+## Cash-out (pagamento enviado)
+
+```json
+{
+  "cashout": {
+    "reference_code": "PSR-1234abcd-...",
+    "external_reference": "withdraw-001",
+    "status": "paid",
+    "end_to_end": "E29477089202605131013...",
+    "occurred_at": "2026-05-13T10:13:01-03:00"
+  }
+}
+```
+
+### Status possíveis
+
+| Status | Significado |
+|---|---|
+| `paid` | Pagamento concluído pelo banco do destinatário. |
+| `refunded` | Falha no provedor / banco rejeitou. **Wallet estornada automaticamente** — você não precisa fazer nada. |
+
+## Boas práticas
+
+<AccordionGroup>
+  <Accordion title="Responda HTTP 200 sempre">
+    Qualquer status diferente de 200 faz a Paysure retentar. Mesmo se você não reconhece o evento, devolva 200 com `{"ok": true}`.
+  </Accordion>
+
+  <Accordion title="Use o reference_code como idempotency key">
+    Webhooks podem ser entregues mais de uma vez (em caso de retry após timeout). Use `cashin.reference_code` ou `cashout.reference_code` pra deduplicar do seu lado.
+
+    ```javascript
+    if (await db.webhookAlreadyProcessed(payload.cashin.reference_code)) {
+      return res.status(200).json({ ok: true });
+    }
+    ```
+  </Accordion>
+
+  <Accordion title="Valide a origem">
+    A Paysure envia webhooks de IPs Cloudflare. Se quiser camada extra de segurança, valide o IP de origem ou implemente uma assinatura HMAC compartilhada (em breve).
+  </Accordion>
+
+  <Accordion title="Timeout">
+    Respondemos em até 10 segundos antes de considerar timeout e retentar. Mantenha o handler rápido — processe em background se precisar de operações pesadas.
+  </Accordion>
+</AccordionGroup>
+
+## Política de retry
+
+Em caso de falha (HTTP != 200 ou timeout), retentamos com backoff:
+
+- 1ª tentativa: imediata
+- 2ª tentativa: ~5 minutos
+- 3ª tentativa: ~30 minutos
+
+Após 3 falhas, o webhook é marcado como `client_error` e fica disponível pra retry manual via painel.

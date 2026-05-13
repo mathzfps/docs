@@ -1,0 +1,55 @@
+---
+title: Autenticação
+description: Headers ci/cs em todas as requests
+---
+
+A Paysure API usa autenticação por **par client-credentials**. Todas as requisições devem incluir dois headers:
+
+| Header | Tipo | Descrição |
+|---|---|---|
+| `ci` | string | Client ID (público, identifica sua chave) |
+| `cs` | string | Client Secret (privado, autentica a chave) |
+
+### Exemplo
+
+```bash
+curl -X POST https://api.paysurebr.com/v1/pix/qrcode \
+  -H "ci: abc123_public_key" \
+  -H "cs: secret_key_xyz789" \
+  -H "Content-Type: application/json" \
+  -d '{ ... }'
+```
+
+## Boas práticas
+
+<AccordionGroup>
+  <Accordion title="Nunca exponha o client_secret no frontend">
+    O `cs` deve ficar **apenas no seu backend**. Em apps mobile/web, faça a chamada via seu servidor — nunca direto do navegador ou app.
+  </Accordion>
+
+  <Accordion title="Use environment variables">
+    Mantenha credenciais fora do código-fonte:
+
+    ```bash
+    PAYSURE_CI=abc123_public_key
+    PAYSURE_CS=secret_key_xyz789
+    ```
+  </Accordion>
+
+  <Accordion title="Múltiplas chaves por ambiente">
+    Crie chaves separadas pra **produção** e **testes**. No painel você pode ter quantas precisar e desativar individualmente em caso de comprometimento.
+  </Accordion>
+
+  <Accordion title="Restrição por IP">
+    No painel, cada API Key pode ter uma whitelist de IPs. Requests fora dessa lista são bloqueadas. Recomendado pra ambientes server-to-server.
+  </Accordion>
+</AccordionGroup>
+
+## Erros comuns
+
+| HTTP | `message` | Causa |
+|---|---|---|
+| 401 | `Missing client_id or client_secret` | Headers `ci` ou `cs` ausentes |
+| 401 | `Invalid credentials or inactive` | Par `ci`/`cs` incorreto ou chave desativada |
+| 403 | `Account inactive` | Conta do user dono da chave está inativa |
+| 429 | Rate limited | Limite de requests por minuto excedido |

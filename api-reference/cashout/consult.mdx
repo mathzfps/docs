@@ -1,0 +1,10 @@
+---
+title: Consultar cash-out
+openapi: POST /v1/pix/cashout/consult
+---
+
+Consulta status de um pagamento PIX (cash-out) usando o `reference_code` retornado quando você criou o pagamento.
+
+<Note>
+Confie no webhook como fonte primária. Esta rota serve para reconciliação manual.
+</Note>
