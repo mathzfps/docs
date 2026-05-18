@@ -18,7 +18,8 @@
             "pages": [
               "index",
               "quickstart",
-              "authentication"
+              "authentication",
+              "implementar-com-ia"
             ]
           },
           {
@@ -65,6 +66,10 @@
   },
   "navbar": {
     "links": [
+      {
+        "label": "Implementar com I.A",
+        "href": "/implementar-com-ia"
+      },
       {
         "label": "Suporte",
         "href": "mailto:suporte@paysurebr.com"

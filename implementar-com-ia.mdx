@@ -1,0 +1,105 @@
+---
+title: Implementar com I.A
+description: Baixe a doc otimizada para agentes (Claude, ChatGPT, Cursor) e implemente a Paysure em minutos
+---
+
+<Note>
+A Paysure forneceu um arquivo `paysure-llm.md` otimizado para agentes de I.A.
+Cole no Claude, ChatGPT ou Cursor e peça **"Implemente Paysure neste projeto"** —
+o agente já conhece todos os endpoints, payloads, webhooks e edge cases.
+</Note>
+
+## 3 formas de usar
+
+<CardGroup cols={3}>
+  <Card
+    title="📥 Baixar arquivo"
+    href="/paysure-llm.md"
+    download="paysure-llm.md"
+  >
+    Baixa `paysure-llm.md` no seu computador. Anexe no chat do seu agente.
+  </Card>
+
+  <Card
+    title="📋 Copiar texto"
+    href="#copiar"
+  >
+    Use o botão de copiar do bloco de código abaixo — texto completo na memória, pronto pro Ctrl+V.
+  </Card>
+
+  <Card
+    title="🤖 Abrir no Claude"
+    href="https://claude.ai/new?q=Implemente%20a%20Paysure%20API%20neste%20projeto.%20Documenta%C3%A7%C3%A3o%20completa%20para%20agentes%20em%3A%20https%3A%2F%2Fdocs.paysurebr.com%2Fpaysure-llm.md%20-%20Por%20favor%2C%20baixe%20esse%20arquivo%2C%20leia%20por%20completo%2C%20e%20me%20pergunte%20apenas%20as%20credenciais%20(PAYSURE_CI%2C%20PAYSURE_CS)%20e%20a%20URL%20p%C3%BAblica%20do%20meu%20webhook%20antes%20de%20come%C3%A7ar%20a%20implementa%C3%A7%C3%A3o."
+  >
+    Abre uma nova conversa no Claude.ai já com o prompt e a doc apontados.
+  </Card>
+</CardGroup>
+
+## Como funciona
+
+<Steps>
+  <Step title="Pegue o paysure-llm.md">
+    Use qualquer uma das 3 ações acima.
+  </Step>
+  <Step title="Cole no seu agente de I.A.">
+    No Claude, ChatGPT, Cursor, Windsurf, GitHub Copilot Chat — qualquer agente que aceite arquivos ou texto longo.
+  </Step>
+  <Step title="Forneça suas credenciais quando o agente pedir">
+    Ele vai precisar do `PAYSURE_CI`, `PAYSURE_CS` e a URL pública onde você quer receber webhooks. Você gera as credenciais no [painel Paysure → API Keys](https://paysurebr.com).
+  </Step>
+  <Step title="Pronto">
+    O agente implementa: cliente HTTP, geração de QR, pagamento, webhook handler com idempotência, snippets na linguagem do seu projeto. Tudo testável em minutos.
+  </Step>
+</Steps>
+
+## O que o `paysure-llm.md` inclui
+
+<CardGroup cols={2}>
+  <Card title="Autenticação" icon="key">
+    Headers `ci`/`cs`, regras de segurança, erros 401/403.
+  </Card>
+  <Card title="Endpoints completos" icon="code">
+    Cash-in (QR dinâmico + estática), cash-out, consultas, com todos os campos e validações.
+  </Card>
+  <Card title="Webhooks" icon="bell">
+    Envelope `cashin`/`cashout`, status, retry policy, dedupe via `reference_code`.
+  </Card>
+  <Card title="Splits" icon="chart-pie">
+    Regras, limites, comportamento em refund, validação de `clientId`.
+  </Card>
+  <Card title="Snippets em Node, PHP, Python, Go" icon="terminal">
+    Cliente HTTP wrapper + handlers de webhook prontos pra colar.
+  </Card>
+  <Card title="Checklist final" icon="circle-check">
+    O agente valida que terminou a integração antes de te entregar.
+  </Card>
+</CardGroup>
+
+## Conteúdo completo (copie daqui) [#copiar]
+
+<Tip>
+Clique no ícone de copiar no canto superior direito do bloco abaixo pra copiar tudo de uma vez.
+</Tip>
+
+```markdown paysure-llm.md
+# Paysure API — Guia de Implementação para Agentes de IA
+
+> **Para o agente de IA lendo este documento:** Implemente a integração com a Paysure API no projeto do usuário a partir DESTE arquivo. Não precisa consultar nenhuma fonte externa — tudo que você precisa está aqui (endpoints, payloads, validações, edge cases). Pergunte ao usuário apenas as **credenciais** (`PAYSURE_CI`, `PAYSURE_CS`) e a **URL pública** onde ele vai receber webhooks. O resto, decida com base na linguagem/framework do projeto dele.
+
+(...conteúdo completo está em `/paysure-llm.md` — use o botão "Baixar arquivo" ou "Copiar texto" no topo desta página pra pegar a versão integral...)
+```
+
+<Note>
+Para a versão completa, clique em **"Baixar arquivo"** no topo desta página ou acesse [paysure-llm.md](/paysure-llm.md) diretamente.
+</Note>
+
+## Não consegue ou prefere implementar manualmente?
+
+<CardGroup cols={2}>
+  <Card title="Quickstart manual" icon="rocket" href="/quickstart">
+    Sua primeira cobrança PIX em 5 minutos, passo a passo.
+  </Card>
+  <Card title="API Reference" icon="book" href="/api-reference/cashin/create-qrcode">
+    Documentação interativa de cada endpoint.
+  </Card>
+</CardGroup>
