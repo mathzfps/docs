@@ -78,12 +78,12 @@
     "primary": {
       "type": "button",
       "label": "Painel",
-      "href": "https://paysurebr.com"
+      "href": "https://paysure.com.br/"
     }
   },
   "footer": {
     "socials": {
-      "website": "https://paysurebr.com"
+      "website": "https://paysure.com.br/"
     }
   }
 }

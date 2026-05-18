@@ -17,7 +17,7 @@ info:
 
   contact:
     name: Paysure Suporte
-    url: https://paysurebr.com
+    url: https://paysure.com.br/
 servers:
   - url: https://api.paysurebr.com
     description: Produção
