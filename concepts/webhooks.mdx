@@ -34,8 +34,38 @@ Toda transação eventualmente envia um **POST** para a `postbackUrl` que você 
 | Status | Significado |
 |---|---|
 | `paid` | Cliente pagou. Saldo da conta é creditado. |
-| `refunded` | Cliente fez devolução (BACEN). Saldo estornado. |
-| `expired` | QR Code expirou sem pagamento (status terminal). |
+| `refunded` | Cliente fez devolução (BACEN) **ou** transação entrou em revisão MED. Saldo estornado. |
+| `expired` | QR Code expirou sem pagamento (após 24h, status terminal). |
+
+### MED / Bloqueio por infração BACEN
+
+Quando uma transação `paid` entra em revisão MED (chargeback), você recebe um webhook **adicional** com `status=refunded` e um campo extra `event` indicando o motivo:
+
+```json
+{
+  "cashin": {
+    "reference_code": "PSR-9c8f7a1e-...",
+    "external_reference": "pedido-001",
+    "value_cents": 10000,
+    "status": "refunded",
+    "event": "med_block",
+    "reason": "Transação em revisão MED — saldo bloqueado",
+    "occurred_at": "2026-06-02T15:36:40-03:00",
+    "end_to_end": "E18236120202606021536...",
+    "payer_name": "João da Silva",
+    "payer_document": "12345678900",
+    "payment_date": "2026-06-01T02:04:46-03:00"
+  }
+}
+```
+
+- `value_cents` reflete o valor **bruto** da transação (não o líquido creditado) — é o que o BACEN tira da Paysure.
+- A devolução é **irreversível pelo seu sistema**: bloqueie/estorne o saldo do cliente final imediatamente.
+- Atualizações posteriores da disputa (vitória, derrota, cancelamento) **não** disparam novo webhook — são tratadas internamente.
+
+<Note>
+Webhooks de MED só são enviados pra contas marcadas como **sub-gateway** (PSPs que repassam transações pra clientes finais). Se você opera direto com pagadores e não gerencia clientes finais, ignore essa seção. Pra habilitar como sub-gateway, fale com [suporte@paysurebr.com](mailto:suporte@paysurebr.com).
+</Note>
 
 ## Cash-out (pagamento enviado)
 
