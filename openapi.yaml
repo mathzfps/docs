@@ -46,6 +46,7 @@ paths:
               generator_name: "João da Silva"
               generator_document: "12345678900"
               description: "Pedido #12345"
+              expiration_seconds: 3600
               splits:
                 - clientId: "parceiro1"
                   value: 5
@@ -246,6 +247,15 @@ components:
           type: array
           maxItems: 10
           items: { $ref: '#/components/schemas/Split' }
+        expiration_seconds:
+          type: integer
+          minimum: 60
+          maximum: 86400
+          default: 3600
+          nullable: true
+          description: |
+            Tempo de expiração do QR Code, em segundos (TTL). Opcional — se omitido, usa **3600** (1 hora).
+            Mínimo 60s, máximo 86400s (24h). Após expirar, o QR não pode mais ser pago.
 
     CashInResponse:
       type: object
